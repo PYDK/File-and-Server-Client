@@ -1,4 +1,4 @@
-all: mkdir pack109 hashmap client server
+all: mkdir client server
 
 mkdir:
 	mkdir -p build
@@ -11,32 +11,32 @@ mkdir:
 	mkdir -p received
 
 pack109:
-	make libpack109.a -C lib/pack109
+	make static-pack109 -C lib/
 
 hashmap:
-	make static -C lib/hashmap
+	make static-hashmap -C lib/
 
-client.o:
-	g++ src/bin/client.cpp -c -lpack109 -Llib/pack109/build/lib/release -Ilib/pack109/include -std=c++11
+client.o: mkdir
+	g++ src/bin/client.cpp -c -I lib/include -std=c++11
 	mv client.o build/objects/release
 
-client: client.o
-	g++ build/objects/release/client.o -o client -lpack109 -Llib/pack109/build/lib/release -Ilib/pack109/include -std=c++11
+client: pack109 client.o
+	g++ build/objects/release/client.o -o client -lpack109 -Llib/build/lib/release -std=c++11
 	mv client build/bin/release
 
-server.o:
-	g++ src/bin/server.cpp -c -Ilib/pack109/include -Ilib/hashmap/include -Ilib/hashmap/lib/include -std=c++11
+server.o: mkdir
+	g++ src/bin/server.cpp -c -Ilib/include -std=c++11
 	mv server.o build/objects/release
 
-server: server.o
-	g++ build/objects/release/server.o -o server -lpack109 -Llib/pack109/build/lib/release -lhashmap -Llib/hashmap/build/lib/release -llinkedlist -Llib/hashmap/lib/build/lib/release -std=c++11
+server: hashmap server.o
+	g++ build/objects/release/server.o -o server -lhashmap -Llib/build/lib/release -std=c++11
 	mv server build/bin/release
 
 pack109.so:
-	make libpack109.so -C lib/pack109
+	make shared-pack109 -C lib/
 
 hashmap.so:
-	make shared -C lib/hashmap
+	make shared-hashmap -C lib/
 
 install: mkdir pack109.so hashmap.so client server
 	sudo cp lib/pack109/build/lib/release/libpack109.so /usr/lib/
@@ -53,8 +53,7 @@ uninstall:
 	sudo rm /usr/bin/server
 
 clean:
-	make clean -C lib/pack109
-	make clean -C lib/hashmap
+	make clean -C lib/
 	rm -f *.a
 	rm -f *.o
 	rm -rf build
